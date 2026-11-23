@@ -2,74 +2,93 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UrFU Deadline & Rating Tracker // ИРИТ-РТФ</title>
+    <title>UrFU Deadline & Rating Tracker</title>
     <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --border: #334155;
-            --text: #f8fafc;
-            --muted: #94a3b8;
-            --high: #ef4444;
-            --med: #f59e0b;
-            --low: #10b981;
-            --accent: #6366f1;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 24px 16px; }
-        .container { max-width: 860px; margin: 0 auto; }
-        header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        h1 { font-size: 1.4rem; }
-        .rating-box { background: rgba(99, 102, 241, 0.15); border: 1px solid var(--accent); padding: 8px 16px; border-radius: 10px; font-weight: 700; color: #a5b4fc; }
-        .task-list { display: flex; flex-direction: column; gap: 12px; }
-        .task-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .task-info h3 { font-size: 1.05rem; margin-bottom: 4px; }
-        .task-meta { font-size: 0.85rem; color: var(--muted); }
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .prio-high { background: rgba(239, 68, 68, 0.15); color: var(--high); border: 1px solid rgba(239, 68, 68, 0.4); }
-        .prio-med { background: rgba(245, 158, 11, 0.15); color: var(--med); border: 1px solid rgba(245, 158, 11, 0.4); }
-        .prio-low { background: rgba(16, 185, 129, 0.15); color: var(--low); border: 1px solid rgba(16, 185, 129, 0.4); }
-        .progress-wrap { width: 100%; background: #0f172a; height: 8px; border-radius: 4px; margin-top: 10px; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--accent); }
+        body { background: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; padding: 24px; max-width: 850px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 16px; }
+        .score-badge { background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; padding: 10px 16px; border-radius: 12px; font-weight: bold; }
+        .form-box { background: #1e293b; padding: 16px; border-radius: 12px; margin-bottom: 20px; display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr auto; gap: 8px; }
+        input, select, button { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+        button { background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; border: none; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .card:hover { border-color: #38bdf8; }
+        .card.done { opacity: 0.45; text-decoration: line-through; }
+        .tag { font-size: 11px; padding: 5px 10px; border-radius: 8px; font-weight: bold; }
+        .high { background: rgba(239,68,68,0.2); color: #f87171; }
+        .med { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .low { background: rgba(16,185,129,0.2); color: #34d399; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div>
-                <h1>📊 UrFU Deadline & Rating Tracker</h1>
-                <p style="color: var(--muted); font-size: 0.9rem; margin-top: 4px;">Аналитика дедлайнов и БРС для 1 курса ИВТ (ИРИТ-РТФ)</p>
-            </div>
-            <div class="rating-box" id="avgRating">Прогноз БРС: 84.5 / 100</div>
-        </header>
-
-        <div class="task-list" id="taskList"></div>
+    <div class="header">
+        <div>
+            <h2 style="margin:0;">📊 UrFU Deadline & Rating Tracker</h2>
+            <p style="color:#94a3b8; margin:4px 0 0; font-size:13px;">Добавьте свои дедлайны или кликните по задаче, чтобы отметить сдачу</p>
+        </div>
+        <div class="score-badge">Прогноз БРС: <span id="brs">60.0</span> / 100</div>
     </div>
 
-    <script>
-        const tasks = [
-            { subject: "Основы программирования (C# / ulearn)", title: "Практика: Маршруты и графы", daysLeft: 2, maxPoints: 25, progress: 80 },
-            { subject: "Линейная алгебра и аналитическая геометрия", title: "Контрольная работа №2", daysLeft: 4, maxPoints: 20, progress: 50 },
-            { subject: "История России (OpenEdu)", title: "Тестирование по модулю 4", daysLeft: 7, maxPoints: 15, progress: 100 },
-            { subject: "Информатика и ВТ", title: "Лабораторная работа: Алгоритмы сортировки", daysLeft: 1, maxPoints: 30, progress: 65 }
-        ];
+    <form class="form-box" id="addForm">
+        <input type="text" id="tTitle" placeholder="Название лабы / теста" required>
+        <input type="text" id="tSubj" placeholder="Предмет (напр. C#)" required>
+        <input type="number" id="tPts" placeholder="Баллы" min="1" max="100" required>
+        <input type="number" id="tHours" placeholder="Часов до сдачи" min="1" required>
+        <select id="tDiff">
+            <option value="5">Сложность 5</option>
+            <option value="4">Сложность 4</option>
+            <option value="3" selected>Сложность 3</option>
+            <option value="2">Сложность 2</option>
+            <option value="1">Сложность 1</option>
+        </select>
+        <button type="submit">+ Добавить</button>
+    </form>
 
-        const list = document.getElementById("taskList");
-        list.innerHTML = tasks.sort((a, b) => a.daysLeft - b.daysLeft).map(t => {
-            const prioClass = t.daysLeft <= 2 ? "prio-high" : (t.daysLeft <= 5 ? "prio-med" : "prio-low");
-            const prioText = t.daysLeft <= 2 ? "Высокий приоритет" : (t.daysLeft <= 5 ? "Средний приоритет" : "В графике");
-            return `
-                <div class="task-card">
-                    <div class="task-info" style="flex: 1; min-width: 240px;">
-                        <h3>${t.title}</h3>
-                        <div class="task-meta">${t.subject} • Осталось дней: <b>${t.daysLeft}</b> • Вес: <b>${t.maxPoints} баллов</b></div>
-                        <div class="progress-wrap"><div class="progress-bar" style="width: ${t.progress}%"></div></div>
+    <div id="list"></div>
+
+    <script src="data.js"></script>
+    <script>
+        let tasks = (window.TASKS_DATA ||).map(t => ({ ...t, done: false }));
+
+        function recalcAndRender() {
+            tasks.forEach(t => {
+                t.urgencyIndex = Number(((t.maxPoints * t.difficulty) / Math.max(t.hoursLeft, 1)).toFixed(2));
+                t.prio = t.urgencyIndex >= 15 ? "high" : t.urgencyIndex >= 8 ? "med" : "low";
+                t.label = t.urgencyIndex >= 15 ? "ВЫСОКИЙ ПРИОРИТЕТ" : t.urgencyIndex >= 8 ? "СРЕДНИЙ ПРИОРИТЕТ" : "В ГРАФИКЕ";
+            });
+            tasks.sort((a, b) => b.urgencyIndex - a.urgencyIndex);
+
+            let score = 60.0;
+            document.getElementById("list").innerHTML = tasks.map((t, i) => {
+                if (t.done) score += (t.maxPoints * 0.4);
+                return `<div class="card ${t.done ? 'done' : ''}" onclick="toggle(${i})">
+                    <div>
+                        <strong>${t.title}</strong>
+                        <div style="color:#94a3b8; font-size:13px; margin-top:4px;">
+                            ${t.subj} • Осталось: ${t.hoursLeft} ч. • Вес: ${t.maxPoints} б. • Индекс: <b>${t.urgencyIndex}</b>
+                        </div>
                     </div>
-                    <span class="badge ${prioClass}">${prioText}</span>
-                </div>
-            `;
-        }).join("");
+                    <span class="tag ${t.prio}">${t.done ? '✓ СДАНО' : t.label}</span>
+                </div>`;
+            }).join("");
+            document.getElementById("brs").textContent = Math.min(score, 100).toFixed(1);
+        }
+
+        document.getElementById("addForm").addEventListener("submit", e => {
+            e.preventDefault();
+            tasks.push({
+                title: document.getElementById("tTitle").value,
+                subj: document.getElementById("tSubj").value,
+                maxPoints: Number(document.getElementById("tPts").value),
+                hoursLeft: Number(document.getElementById("tHours").value),
+                difficulty: Number(document.getElementById("tDiff").value),
+                done: false
+            });
+            e.target.reset();
+            recalcAndRender();
+        });
+
+        function toggle(i) { tasks[i].done = !tasks[i].done; recalcAndRender(); }
+        recalcAndRender();
     </script>
 </body>
 </html>
